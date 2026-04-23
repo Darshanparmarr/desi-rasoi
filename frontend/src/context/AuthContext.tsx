@@ -18,6 +18,7 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  googleLogin: (credential: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
 }
@@ -92,6 +93,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const googleLogin = async (credential: string) => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
+      const { data } = await api.post('/users/google', { credential });
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      dispatch({ type: 'LOGIN_SUCCESS', payload: data });
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Google login failed';
+      dispatch({ type: 'LOGIN_FAIL', payload: message });
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('userInfo');
     dispatch({ type: 'LOGOUT' });
@@ -107,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...state,
         login,
         register,
+        googleLogin,
         logout,
         clearError,
       }}

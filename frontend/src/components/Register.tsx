@@ -2,13 +2,14 @@ import React, { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { register, loading, error, clearError } = useAuth();
+  const { register, googleLogin, loading, error, clearError } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -26,6 +27,18 @@ const Register: React.FC = () => {
       navigate('/');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed');
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      if (credentialResponse.credential) {
+        await googleLogin(credentialResponse.credential);
+        toast.success('Google signup successful!');
+        navigate('/');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Google signup failed');
     }
   };
 
@@ -110,6 +123,26 @@ const Register: React.FC = () => {
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
+
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                toast.error('Google Signup Failed');
+              }}
+            />
+          </div>
+        </div>
 
         <div className="mt-6 text-center">
           <p className="text-gray-600 dark:text-gray-400">

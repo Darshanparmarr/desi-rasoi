@@ -31,6 +31,7 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import Login from './components/Login';
 import Register from './components/Register';
 import ChatBot from './components/ChatBot';
+import WhatsAppWidget from './components/WhatsAppWidget';
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
                   </Routes>
                 </main>
                 <ChatBot />
+                <WhatsAppWidget />
               </div>
             </Router>
           </ThemeProvider>

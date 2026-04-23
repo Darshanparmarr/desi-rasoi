@@ -4,6 +4,7 @@ const { protect, admin } = require('../middleware/auth');
 const {
   registerUser,
   loginUser,
+  googleLogin,
   getUserProfile,
   updateUserProfile,
   getUsers,
@@ -14,6 +15,7 @@ const {
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/google', googleLogin);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password-otp', resetPasswordWithOtp);
 router.get('/profile', protect, getUserProfile);

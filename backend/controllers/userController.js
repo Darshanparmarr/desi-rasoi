@@ -2,6 +2,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 const User = require('../models/User');
 
 // Generate JWT Token
@@ -104,6 +107,53 @@ const loginUser = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Auth user with Google
+// @route   POST /api/users/google
+// @access  Public
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    
+    // If no client ID is set, we still try to decode it, or fail gracefully
+    // Usually it's best to verify. If GOOGLE_CLIENT_ID is missing, verification might fail or we should just warn.
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user with a random password since they use Google
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(randomPassword, salt);
+      
+      user = new User({
+        name,
+        email,
+        password: hashedPassword,
+      });
+
+      await user.save();
+    }
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(401).json({ message: 'Google authentication failed. Please check your configuration.' });
   }
 };
 
@@ -314,6 +364,7 @@ const resetPasswordWithOtp = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  googleLogin,
   getUserProfile,
   updateUserProfile,
   getUsers,

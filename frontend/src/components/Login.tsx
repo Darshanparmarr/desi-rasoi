@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { toast } from 'react-toastify';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -13,7 +14,7 @@ const Login: React.FC = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
-  const { login, loading, error, clearError } = useAuth();
+  const { login, googleLogin, loading, error, clearError } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -26,6 +27,18 @@ const Login: React.FC = () => {
       navigate('/');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Login failed');
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      if (credentialResponse.credential) {
+        await googleLogin(credentialResponse.credential);
+        toast.success('Google login successful!');
+        navigate('/');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Google login failed');
     }
   };
 
@@ -188,6 +201,28 @@ const Login: React.FC = () => {
             {isForgotPasswordMode && otpSent && (resetLoading ? 'Resetting Password...' : 'Reset Password')}
           </button>
         </form>
+
+        {!isForgotPasswordMode && (
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  toast.error('Google Login Failed');
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 text-center">
           {!isForgotPasswordMode ? (
