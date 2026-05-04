@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 import { GoogleLogin } from '@react-oauth/google';
+import { Mail, Lock, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -20,10 +21,9 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
-    
     try {
       await login(email, password);
-      toast.success('Login successful!');
+      toast.success('Login successful');
       navigate('/');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Login failed');
@@ -34,7 +34,7 @@ const Login: React.FC = () => {
     try {
       if (credentialResponse.credential) {
         await googleLogin(credentialResponse.credential);
-        toast.success('Google login successful!');
+        toast.success('Logged in with Google');
         navigate('/');
       }
     } catch (error: any) {
@@ -45,12 +45,10 @@ const Login: React.FC = () => {
   const handleSendOtp = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
-
     if (!email) {
       toast.error('Please enter your email');
       return;
     }
-
     try {
       setOtpLoading(true);
       await api.post('/users/forgot-password', { email });
@@ -66,20 +64,14 @@ const Login: React.FC = () => {
   const handleResetPassword = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
-
     if (!email || !otp || !newPassword) {
       toast.error('Please fill all fields');
       return;
     }
-
     try {
       setResetLoading(true);
-      await api.post('/users/reset-password-otp', {
-        email,
-        otp,
-        newPassword
-      });
-      toast.success('Password reset successful. Please sign in.');
+      await api.post('/users/reset-password-otp', { email, otp, newPassword });
+      toast.success('Password reset. Please sign in.');
       setIsForgotPasswordMode(false);
       setOtpSent(false);
       setOtp('');
@@ -92,174 +84,200 @@ const Login: React.FC = () => {
     }
   };
 
-  const switchToForgotPassword = () => {
-    clearError();
-    setIsForgotPasswordMode(true);
-    setOtpSent(false);
-    setOtp('');
-    setNewPassword('');
-  };
-
-  const switchToLogin = () => {
-    clearError();
-    setIsForgotPasswordMode(false);
-    setOtpSent(false);
-    setOtp('');
-    setNewPassword('');
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back</h1>
-          <p className="text-gray-600 dark:text-gray-400">Sign in to your Akshar E-Commerce account</p>
+    <div className="grid lg:grid-cols-2 min-h-[calc(100vh-4rem)]">
+      {/* Brand panel */}
+      <aside className="hidden lg:flex relative overflow-hidden bg-primary-900 text-white p-14 flex-col justify-between">
+        <div className="absolute inset-0 bg-hero-radial opacity-60" />
+        <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-secondary-500/30 blur-3xl" />
+        <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-primary-500/30 blur-3xl" />
+
+        <Link to="/" className="relative inline-flex items-center gap-3">
+          <span className="w-11 h-11 rounded-2xl bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center text-primary-900 font-display font-bold text-xl">
+            A
+          </span>
+          <span className="font-display text-xl font-bold">Akshar E-Commerce</span>
+        </Link>
+
+        <div className="relative">
+          <span className="eyebrow text-secondary-300">Welcome back</span>
+          <h2 className="mt-3 font-display text-4xl font-bold leading-tight">
+            Tastes you remember,<br /> delivered to your door.
+          </h2>
+          <p className="mt-4 text-primary-100/80 max-w-md">
+            Sign in to track orders, save favourites and unlock exclusive seasonal flavours from our home kitchens.
+          </p>
+          <div className="mt-8 flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {[1, 2, 3].map((n) => (
+                <img
+                  key={n}
+                  src={`/images/products/product-${n}.webp`}
+                  alt=""
+                  className="h-9 w-9 rounded-full ring-2 ring-primary-900 object-cover"
+                />
+              ))}
+            </div>
+            <p className="text-sm text-primary-100/80">10,000+ happy customers across India</p>
+          </div>
         </div>
 
-        <form
-          onSubmit={isForgotPasswordMode ? (otpSent ? handleResetPassword : handleSendOtp) : handleSubmit}
-          className="space-y-6"
-        >
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-              required
-            />
+        <div className="relative flex items-center gap-3 text-sm text-primary-100/80">
+          <ShieldCheck className="h-4 w-4 text-secondary-300" />
+          Secure, encrypted login
+        </div>
+      </aside>
+
+      {/* Form */}
+      <main className="flex items-center justify-center px-4 py-10 sm:py-16">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Sparkles className="mx-auto h-6 w-6 text-secondary-500" />
+            <h1 className="mt-2 font-display text-3xl font-bold text-slate-900 dark:text-white">
+              {isForgotPasswordMode ? 'Reset password' : 'Welcome back'}
+            </h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {isForgotPasswordMode
+                ? otpSent
+                  ? 'Enter the OTP sent to your email and choose a new password.'
+                  : "We'll send a 6-digit OTP to your email."
+                : 'Sign in to your Akshar E-Commerce account'}
+            </p>
           </div>
 
-          {!isForgotPasswordMode ? (
+          <form
+            onSubmit={isForgotPasswordMode ? (otpSent ? handleResetPassword : handleSendOtp) : handleSubmit}
+            className="space-y-4"
+          >
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                required
-              />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input-field pl-11"
+                  placeholder="you@email.com"
+                  required
+                />
+              </div>
             </div>
-          ) : (
+
+            {!isForgotPasswordMode ? (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-field pl-11"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              </div>
+            ) : otpSent ? (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">OTP</label>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="input-field tracking-[0.4em] text-center font-semibold"
+                    placeholder="••••••"
+                    maxLength={6}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">New password</label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="input-field"
+                    minLength={6}
+                    required
+                  />
+                </div>
+              </>
+            ) : null}
+
+            {error && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-900/20 dark:border-rose-900/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-200">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || otpLoading || resetLoading}
+              className="btn-secondary btn-lg w-full justify-center"
+            >
+              {!isForgotPasswordMode && (loading ? 'Signing in…' : 'Sign in')}
+              {isForgotPasswordMode && !otpSent && (otpLoading ? 'Sending OTP…' : 'Send OTP')}
+              {isForgotPasswordMode && otpSent && (resetLoading ? 'Resetting…' : 'Reset password')}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+
+          {!isForgotPasswordMode && (
             <>
-              {otpSent && (
-                <>
-                  <div>
-                    <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      OTP
-                    </label>
-                    <input
-                      type="text"
-                      id="otp"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      className="input-field"
-                      placeholder="Enter 6-digit OTP"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      New Password
-                    </label>
-                    <input
-                      type="password"
-                      id="newPassword"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="input-field"
-                      minLength={6}
-                      required
-                    />
-                  </div>
-                </>
-              )}
+              <div className="my-6 flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                <span className="text-xs uppercase tracking-wider text-slate-400">or</span>
+                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              </div>
+              <div className="flex justify-center">
+                <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error('Google login failed')} />
+              </div>
             </>
           )}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || otpLoading || resetLoading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {!isForgotPasswordMode && (loading ? 'Signing in...' : 'Sign In')}
-            {isForgotPasswordMode && !otpSent && (otpLoading ? 'Sending OTP...' : 'Send OTP')}
-            {isForgotPasswordMode && otpSent && (resetLoading ? 'Resetting Password...' : 'Reset Password')}
-          </button>
-        </form>
-
-        {!isForgotPasswordMode && (
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => {
-                  toast.error('Google Login Failed');
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="mt-4 text-center">
-          {!isForgotPasswordMode ? (
-            <button
-              type="button"
-              onClick={switchToForgotPassword}
-              className="text-primary-600 hover:text-primary-700 font-medium text-sm"
-            >
-              Forgot Password?
-            </button>
-          ) : (
-            <div className="space-y-2">
-              {!otpSent && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  We will send a 6-digit OTP to your email.
-                </p>
-              )}
+          <div className="mt-6 text-center text-sm">
+            {!isForgotPasswordMode ? (
               <button
                 type="button"
-                onClick={switchToLogin}
-                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                onClick={() => {
+                  clearError();
+                  setIsForgotPasswordMode(true);
+                  setOtpSent(false);
+                  setOtp('');
+                  setNewPassword('');
+                }}
+                className="text-primary-700 dark:text-secondary-400 font-semibold hover:underline"
               >
-                Back to Login
+                Forgot password?
               </button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  clearError();
+                  setIsForgotPasswordMode(false);
+                  setOtpSent(false);
+                  setOtp('');
+                  setNewPassword('');
+                }}
+                className="text-primary-700 dark:text-secondary-400 font-semibold hover:underline"
+              >
+                Back to login
+              </button>
+            )}
+          </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
-              Sign up
+            <Link to="/register" className="font-semibold text-primary-700 dark:text-secondary-400 hover:underline">
+              Create one
             </Link>
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

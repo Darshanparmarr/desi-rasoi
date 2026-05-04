@@ -71,8 +71,36 @@ module.exports = {
         }
       },
       fontFamily: {
-        'sans': ['Inter', 'ui-sans-serif', 'system-ui'],
-      }
+        'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        'display': ['"Playfair Display"', 'ui-serif', 'Georgia', 'serif'],
+      },
+      boxShadow: {
+        'card': '0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -8px rgba(15, 23, 42, 0.08)',
+        'card-hover': '0 2px 4px rgba(15, 23, 42, 0.06), 0 16px 40px -12px rgba(15, 23, 42, 0.18)',
+        'soft': '0 2px 8px rgba(15, 23, 42, 0.06)',
+        'glow-orange': '0 8px 24px -8px rgba(255, 134, 42, 0.55)',
+        'glow-navy': '0 8px 24px -8px rgba(0, 49, 88, 0.55)',
+      },
+      borderRadius: {
+        '4xl': '2rem',
+      },
+      animation: {
+        'float': 'float 6s ease-in-out infinite',
+        'fade-up': 'fadeUp 0.6s ease-out forwards',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+        fadeUp: {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      backgroundImage: {
+        'hero-radial': 'radial-gradient(ellipse at top, rgba(255, 134, 42, 0.18), transparent 60%), radial-gradient(ellipse at bottom right, rgba(0, 49, 88, 0.22), transparent 60%)',
+      },
     },
   },
   plugins: [],

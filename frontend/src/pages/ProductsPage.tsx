@@ -3,7 +3,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
-import { Star, ShoppingCart, Search, Filter, Heart, Building2, ArrowRight } from 'lucide-react';
+import { Star, ShoppingCart, Search, Heart, Building2, ArrowRight, SlidersHorizontal, X } from 'lucide-react';
 import { getImageUrl } from '../utils/imageUrl';
 import { toast } from 'react-toastify';
 
@@ -30,30 +30,43 @@ interface Category {
   name: string;
 }
 
+const FALLBACKS = [
+  '/images/products/product-1.webp',
+  '/images/products/product-2.webp',
+  '/images/products/product-3.webp',
+  '/images/products/product-4.webp',
+  '/images/products/product-5.webp',
+  '/images/products/product-6.webp',
+];
+
+const SORT_OPTIONS: { label: string; value: string }[] = [
+  { label: 'Most popular', value: 'popular' },
+  { label: 'Newest', value: 'newest' },
+  { label: 'Price: low to high', value: 'price-asc' },
+  { label: 'Price: high to low', value: 'price-desc' },
+];
+
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { wishlist, addToWishlist, removeFromWishlist, fetchWishlist, isInWishlist } = useWishlist();
   const { user } = useAuth();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('keyword') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
+  const [sort, setSort] = useState('popular');
   const [showFilters, setShowFilters] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data } = await api.get<Category[]>('/categories');
-        setCategories(data);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-      }
-    };
-    fetchCategories();
+    api
+      .get<Category[]>('/categories')
+      .then(({ data }) => setCategories(data))
+      .catch((err) => console.error('Failed to fetch categories:', err));
   }, []);
 
   useEffect(() => {
@@ -61,12 +74,9 @@ const ProductsPage: React.FC = () => {
       try {
         setLoading(true);
         const params = new URLSearchParams();
-        // Backend reads pageNumber, not page
         params.append('pageNumber', page.toString());
-
         if (searchQuery) params.append('keyword', searchQuery);
         if (selectedCategory) params.append('category', selectedCategory);
-
         const { data } = await api.get<ProductsResponse>(`/products?${params}`);
         setProducts(data.products);
         setPage(data.page);
@@ -77,12 +87,23 @@ const ProductsPage: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchProducts();
-    if (user) {
-      fetchWishlist();
-    }
+    if (user) fetchWishlist();
   }, [page, searchQuery, selectedCategory, user, fetchWishlist]);
+
+  const sortedProducts = React.useMemo(() => {
+    const list = [...products];
+    switch (sort) {
+      case 'price-asc':
+        return list.sort((a, b) => a.price - b.price);
+      case 'price-desc':
+        return list.sort((a, b) => b.price - a.price);
+      case 'newest':
+        return list;
+      default:
+        return list.sort((a, b) => b.rating - a.rating);
+    }
+  }, [products, sort]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,258 +126,277 @@ const ProductsPage: React.FC = () => {
   const addToCart = async (productId: string) => {
     try {
       await api.post('/cart/add', { productId, quantity: 1 });
-      toast.success('Added to cart successfully!');
+      toast.success('Added to cart');
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to add to cart';
-      toast.error(message);
+      toast.error(error.response?.data?.message || 'Failed to add to cart');
     }
   };
 
   const handleWishlistToggle = async (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
     e.preventDefault();
-    
     if (!user) {
       toast.info('Please login to add items to wishlist');
       navigate('/login');
       return;
     }
-
     try {
       if (isInWishlist(product._id)) {
-        const wishlistItem = wishlist?.items?.find(item => item.product._id === product._id);
-        if (wishlistItem) {
-          await removeFromWishlist(wishlistItem._id);
+        const item = wishlist?.items?.find((i) => i.product._id === product._id);
+        if (item) {
+          await removeFromWishlist(item._id);
           toast.success('Removed from wishlist');
         }
       } else {
         await addToWishlist(product._id);
-        toast.success('Added to wishlist!');
+        toast.success('Added to wishlist');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update wishlist');
     }
   };
 
+  const activeFilters = [selectedCategory, searchQuery].filter(Boolean);
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Wholesale Banner */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl md:rounded-2xl p-4 md:p-6 mb-6 md:mb-8 text-white">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-5 h-5 md:w-6 md:h-6" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-bold text-sm md:text-lg">Planning a Wedding, Event, or Need Retail Stock?</h3>
-                <p className="text-green-100 text-xs md:text-sm">Get up to 40% off on bulk orders</p>
-              </div>
+    <div className="container-page py-8 sm:py-12 space-y-6 sm:space-y-8">
+      {/* Wholesale banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-700 via-primary-800 to-primary-900 text-white p-5 sm:p-8">
+        <div className="absolute inset-0 bg-hero-radial opacity-50" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white/10 flex items-center justify-center">
+              <Building2 className="h-6 w-6 text-secondary-300" />
             </div>
-            <Link
-              to="/wholesale"
-              className="px-4 md:px-6 py-2.5 md:py-3 bg-white dark:bg-gray-800 text-green-700 dark:text-green-300 rounded-lg md:rounded-xl font-semibold text-sm md:text-base hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap w-full md:w-auto"
-            >
-              Get Quote
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-secondary-300 font-semibold">Bulk & wholesale</p>
+              <h2 className="font-display text-lg sm:text-2xl font-bold">Plan a wedding, event or retail line?</h2>
+              <p className="text-sm text-primary-100/85">Get up to 40% off on bulk orders.</p>
+            </div>
           </div>
+          <Link to="/wholesale" className="btn-secondary btn-md whitespace-nowrap">
+            Get a quote <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
+      </div>
 
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4">All Products</h1>
-          
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for papad, aachar, masala, snacks..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-              />
-              <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className="btn-outline flex items-center justify-center py-3 md:py-2"
-            >
-              <Filter className="h-5 w-5 mr-2" />
-              Filters
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <span className="eyebrow">Catalog</span>
+          <h1 className="heading-section mt-1">All products</h1>
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {loading ? 'Loading…' : `${products.length} ${products.length === 1 ? 'item' : 'items'} found`}
+        </p>
+      </div>
+
+      {/* Search + sort + filter trigger */}
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3">
+        <form onSubmit={handleSearch} className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search papad, aachar, masala…"
+            className="input-field pl-11"
+          />
+        </form>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="input-field sm:w-56"
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => setShowFilters((s) => !s)}
+          className="btn-outline btn-md justify-center"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters
+        </button>
+      </div>
+
+      {/* Active filter chips */}
+      {activeFilters.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active</span>
+          {selectedCategory && (
+            <button onClick={() => handleCategoryChange('')} className="chip-orange hover:bg-secondary-100">
+              {selectedCategory}
+              <X className="h-3 w-3" />
             </button>
-          </form>
-
-          {/* Filters */}
-          {showFilters && (
-            <div className="bg-white dark:bg-gray-800 p-3 md:p-4 rounded-lg shadow-md mb-4 md:mb-6 border border-transparent dark:border-gray-700 transition-colors">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2 md:mb-3 text-sm md:text-base">Categories</h3>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => handleCategoryChange('')}
-                  className={`px-3 md:px-4 py-2 rounded-lg transition-colors text-xs md:text-sm ${
-                    !selectedCategory
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                  }`}
-                >
-                  All
-                </button>
-                {categories.map((category) => (
-                  <button
-                    key={category._id}
-                    onClick={() => handleCategoryChange(category.name)}
-                    className={`px-3 md:px-4 py-2 rounded-lg transition-colors text-xs md:text-sm ${
-                      selectedCategory === category.name
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
-                    }`}
-                  >
-                    {category.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+          )}
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setPage(1);
+                const p = new URLSearchParams();
+                if (selectedCategory) p.append('category', selectedCategory);
+                setSearchParams(p);
+              }}
+              className="chip-navy hover:bg-primary-100"
+            >
+              "{searchQuery}"
+              <X className="h-3 w-3" />
+            </button>
           )}
         </div>
+      )}
 
-        {/* Loading State */}
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-            {[...Array(8)].map((_, index) => (
-              <div key={index} className="animate-pulse">
-                <div className="bg-gray-200 rounded-lg h-40 md:h-48 mb-3 md:mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              </div>
-            ))}
+      {/* Two-column layout */}
+      <div className="grid lg:grid-cols-[16rem_1fr] gap-6 lg:gap-10">
+        {/* Sidebar filters */}
+        <aside className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
+          <div className="card p-5 sticky top-24">
+            <h3 className="font-semibold text-slate-900 dark:text-white mb-3">Categories</h3>
+            <div className="space-y-1">
+              <button
+                onClick={() => handleCategoryChange('')}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                  !selectedCategory
+                    ? 'bg-primary-50 text-primary-800 font-semibold dark:bg-primary-900/30 dark:text-primary-100'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                All products
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat._id}
+                  onClick={() => handleCategoryChange(cat.name)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    selectedCategory === cat.name
+                      ? 'bg-primary-50 text-primary-800 font-semibold dark:bg-primary-900/30 dark:text-primary-100'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          <>
-            {/* Products Grid */}
-            {products.length > 0 ? (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-                  {products.map((product) => (
-                    <div key={product._id} className="card group relative">
-                      <Link to={`/product/${product._id}`} className="block">
-                        <div className="relative">
-                          <img
-                            src={getImageUrl(product.image)}
-                            alt={product.name}
-                            className="w-full h-36 md:h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const fallbackImages = [
-                                '/images/products/product-1.webp',
-                                '/images/products/product-2.webp',
-                                '/images/products/product-3.webp',
-                                '/images/products/product-4.webp',
-                                '/images/products/product-5.webp',
-                                '/images/products/product-6.webp',
-                                '/images/products/product-7.webp'
-                              ];
-                              const randomIndex = Math.floor(Math.random() * fallbackImages.length);
-                              e.currentTarget.src = fallbackImages[randomIndex];
-                            }}
-                          />
-                          {product.stock < 10 && (
-                            <span className="absolute top-2 right-12 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                              Low Stock
-                            </span>
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <h3 className="font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                            {product.name}
-                          </h3>
-                          <div className="flex items-center mb-2">
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${
-                                    i < Math.floor(product.rating)
-                                      ? 'text-gold-400 fill-current'
-                                      : 'text-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                              ({product.numReviews})
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <span className="text-xl font-bold text-primary-600 dark:text-primary-400">₹{product.price}</span>
-                              <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">({product.weight})</span>
-                            </div>
-                            <span className="text-sm text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                              {product.category}
-                            </span>
-                          </div>
-                        </div>
+        </aside>
+
+        {/* Grid */}
+        <div>
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="card p-3 sm:p-4 animate-pulse">
+                  <div className="aspect-square rounded-xl bg-slate-200 dark:bg-slate-800" />
+                  <div className="mt-3 h-4 w-2/3 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="mt-2 h-3 w-1/3 bg-slate-200 dark:bg-slate-800 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : sortedProducts.length === 0 ? (
+            <div className="card p-12 text-center">
+              <h3 className="font-display text-xl font-bold text-slate-900 dark:text-white">No products found</h3>
+              <p className="mt-2 text-slate-500 dark:text-slate-400">Try a different keyword or category.</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {sortedProducts.map((product) => (
+                  <article key={product._id} className="card card-hover relative flex flex-col overflow-hidden">
+                    <Link to={`/product/${product._id}`} className="block relative">
+                      <div className="aspect-square overflow-hidden bg-stone-100 dark:bg-slate-800">
+                        <img
+                          src={getImageUrl(product.image)}
+                          alt={product.name}
+                          onError={(e) => {
+                            e.currentTarget.src = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+                          }}
+                          className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
+                        />
+                      </div>
+                      {product.stock > 0 && product.stock < 10 && (
+                        <span className="absolute top-3 left-3 chip-red">Only {product.stock} left</span>
+                      )}
+                      {product.stock === 0 && (
+                        <span className="absolute top-3 left-3 chip">Out of stock</span>
+                      )}
+                    </Link>
+
+                    <button
+                      onClick={(e) => handleWishlistToggle(e, product)}
+                      aria-label="Toggle wishlist"
+                      className={`absolute top-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full shadow-soft transition-all ${
+                        isInWishlist(product._id)
+                          ? 'bg-secondary-600 text-white'
+                          : 'bg-white/90 dark:bg-slate-900/90 text-slate-600 dark:text-slate-300 hover:bg-secondary-50 hover:text-secondary-600'
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 ${isInWishlist(product._id) ? 'fill-current' : ''}`} />
+                    </button>
+
+                    <div className="p-4 flex flex-col flex-1">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">{product.category}</p>
+                      <Link to={`/product/${product._id}`} className="block mt-1">
+                        <h3 className="font-semibold text-slate-900 dark:text-white line-clamp-2 hover:text-primary-700 dark:hover:text-secondary-400 transition-colors">
+                          {product.name}
+                        </h3>
                       </Link>
-                      {/* Wishlist Button */}
+                      <div className="mt-2 flex items-center gap-2 text-xs">
+                        <div className="flex items-center text-amber-500">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.floor(product.rating) ? 'fill-current' : 'opacity-30'}`} />
+                          ))}
+                        </div>
+                        <span className="text-slate-500 dark:text-slate-400">({product.numReviews})</span>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <div>
+                          <span className="font-display text-xl font-bold text-primary-900 dark:text-white">₹{product.price}</span>
+                          {product.weight && <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">/ {product.weight}</span>}
+                        </div>
+                      </div>
                       <button
-                        onClick={(e) => handleWishlistToggle(e, product)}
-                        className={`absolute top-2 right-2 p-2 rounded-full shadow-md transition-all duration-200 z-10 ${
-                          isInWishlist(product._id)
-                            ? 'bg-red-500 text-white hover:bg-red-600'
-                            : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(product._id);
+                        }}
+                        disabled={product.stock === 0}
+                        className="btn-secondary btn-sm mt-4 w-full justify-center disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        {product.stock === 0 ? 'Sold out' : 'Add to cart'}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {pages > 1 && (
+                <div className="mt-10 flex justify-center">
+                  <div className="inline-flex flex-wrap items-center gap-1 sm:gap-2 p-2 rounded-2xl bg-white dark:bg-slate-900 shadow-soft border border-slate-100 dark:border-slate-800">
+                    {[...Array(pages)].map((_, idx) => (
+                      <button
+                        key={idx + 1}
+                        onClick={() => setPage(idx + 1)}
+                        className={`min-w-[2.25rem] h-9 px-3 rounded-xl text-sm font-medium transition-colors ${
+                          page === idx + 1
+                            ? 'bg-primary-600 text-white shadow-glow-navy'
+                            : 'text-slate-600 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-slate-800'
                         }`}
                       >
-                        <Heart className={`h-4 w-4 ${isInWishlist(product._id) ? 'fill-current' : ''}`} />
+                        {idx + 1}
                       </button>
-                      {/* Add to Cart Button */}
-                      <div className="px-4 pb-4">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(product._id);
-                          }}
-                          disabled={product.stock === 0}
-                          className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {pages > 1 && (
-                  <div className="flex justify-center mt-6 md:mt-12">
-                    <div className="flex space-x-1 md:space-x-2 overflow-x-auto max-w-full px-2 py-2 hide-scrollbar">
-                      {[...Array(pages)].map((_, index) => (
-                        <button
-                          key={index + 1}
-                          onClick={() => setPage(index + 1)}
-                          className={`px-3 md:px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex-shrink-0 ${
-                            page === index + 1
-                              ? 'bg-primary-600 text-white'
-                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-700'
-                          }`}
-                        >
-                          {index + 1}
-                        </button>
-                      ))}
-                    </div>
+                    ))}
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No products found</h3>
-                <p className="text-gray-600 dark:text-gray-400">Try adjusting your search or filters</p>
-              </div>
-            )}
-          </>
-        )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

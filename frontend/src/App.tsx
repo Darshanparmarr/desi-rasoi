@@ -10,6 +10,7 @@ import { RecentlyViewedProvider } from './context/RecentlyViewedContext';
 import { ProductComparisonProvider } from './context/ProductComparisonContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import CategoriesPage from './pages/CategoriesPage';
@@ -39,9 +40,9 @@ function App() {
             <ProductComparisonProvider>
               <ThemeProvider>
                 <Router>
-                  <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+                  <div className="min-h-screen flex flex-col bg-stone-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
             <Header />
-            <main>
+            <main className="flex-1">
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/products" element={<ProductsPage />} />
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                   </Routes>
                 </main>
+                <Footer />
                 <ChatBot />
                 <WhatsAppWidget />
               </div>

@@ -2,13 +2,35 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingCart, Minus, Plus, Trash2, ArrowLeft, Tag, Truck, Shield, Gift, X } from 'lucide-react';
+import {
+  ShoppingCart,
+  Minus,
+  Plus,
+  Trash2,
+  ChevronRight,
+  Tag,
+  Truck,
+  ShieldCheck,
+  Gift,
+  ArrowRight,
+} from 'lucide-react';
 import { toast } from 'react-toastify';
+import { getImageUrl } from '../utils/imageUrl';
+
+const FALLBACKS = [
+  '/images/products/product-1.webp',
+  '/images/products/product-2.webp',
+  '/images/products/product-3.webp',
+  '/images/products/product-4.webp',
+];
 
 const CartPage: React.FC = () => {
   const { cart, loading, fetchCart, updateCartItem, removeFromCart, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [promoCode, setPromoCode] = useState('');
+  const [discount, setDiscount] = useState(0);
 
   useEffect(() => {
     fetchCart();
@@ -16,10 +38,8 @@ const CartPage: React.FC = () => {
 
   const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-    
     try {
       await updateCartItem(itemId, newQuantity);
-      toast.success('Cart updated');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update cart');
     }
@@ -28,14 +48,14 @@ const CartPage: React.FC = () => {
   const handleRemoveItem = async (itemId: string) => {
     try {
       await removeFromCart(itemId);
-      toast.success('Item removed from cart');
+      toast.success('Item removed');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to remove item');
     }
   };
 
   const handleClearCart = async () => {
-    if (window.confirm('Are you sure you want to clear your cart?')) {
+    if (window.confirm('Clear your entire cart?')) {
       try {
         await clearCart();
         toast.success('Cart cleared');
@@ -44,20 +64,6 @@ const CartPage: React.FC = () => {
       }
     }
   };
-
-  // Clear cart button in the UI
-  const ClearCartButton = () => (
-    <button
-      onClick={handleClearCart}
-      className="flex items-center text-brand-red-500 hover:text-brand-red-600 font-medium transition-colors"
-    >
-      <X className="h-4 w-4 mr-1" />
-      Clear Cart
-    </button>
-  );
-
-  const [promoCode, setPromoCode] = useState('');
-  const [discount, setDiscount] = useState(0);
 
   const handleCheckout = () => {
     if (!user) {
@@ -69,9 +75,9 @@ const CartPage: React.FC = () => {
   };
 
   const handleApplyPromo = () => {
-    if (promoCode.toLowerCase() === 'mukhwas10') {
+    if (promoCode.trim().toLowerCase() === 'akshar10') {
       setDiscount(cart?.totalAmount ? cart.totalAmount * 0.1 : 0);
-      toast.success('10% discount applied!');
+      toast.success('10% discount applied');
     } else {
       toast.error('Invalid promo code');
     }
@@ -79,244 +85,203 @@ const CartPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-green-50 flex items-center justify-center">
-        <div className="animate-pulse text-center">
-          <ShoppingCart className="h-16 w-16 text-brand-green-500 mx-auto mb-4" />
-          <p className="text-brand-green-700 font-medium">Loading your cart...</p>
-        </div>
+      <div className="container-page py-20 text-center">
+        <ShoppingCart className="h-12 w-12 mx-auto text-primary-600 animate-pulse" />
+        <p className="mt-3 text-slate-600 dark:text-slate-300">Loading your cart…</p>
       </div>
     );
   }
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="min-h-screen bg-brand-green-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-12">
-            <div className="w-32 h-32 bg-brand-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
-              <ShoppingCart className="h-16 w-16 text-brand-green-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Your cart is empty</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8 text-lg">
-              Looks like you haven't added any delicious mukhwas to your cart yet.
-            </p>
-            <Link 
-              to="/products" 
-              className="inline-flex items-center bg-brand-green-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-brand-green-700 transition-all transform hover:scale-105"
-            >
-              Start Shopping
-            </Link>
+      <div className="container-page py-16">
+        <div className="card p-10 sm:p-14 text-center max-w-2xl mx-auto">
+          <div className="mx-auto h-20 w-20 rounded-full bg-secondary-50 text-secondary-600 flex items-center justify-center">
+            <ShoppingCart className="h-10 w-10" />
           </div>
+          <h1 className="mt-6 font-display text-3xl font-bold text-slate-900 dark:text-white">Your cart is empty</h1>
+          <p className="mt-3 text-slate-600 dark:text-slate-300">
+            Looks like you haven't added anything yet. Browse our handmade collection — every batch is fresh.
+          </p>
+          <Link to="/products" className="btn-secondary btn-lg mt-8">
+            Start shopping <ArrowRight className="h-5 w-5" />
+          </Link>
         </div>
       </div>
     );
   }
 
-  const finalTotal = cart.totalAmount - discount;
+  const subtotal = cart.totalAmount;
+  const shipping = subtotal >= 500 ? 0 : 49;
+  const finalTotal = Math.max(0, subtotal - discount + shipping);
 
   return (
-    <div className="min-h-screen bg-brand-green-50">
+    <div className="container-page py-6 sm:py-10 space-y-6">
       {/* Breadcrumb */}
-      <div className="bg-white dark:bg-gray-800 border-b border-brand-green-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4">
-          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-            <Link to="/" className="hover:text-brand-green-600">Home</Link>
-            <span className="mx-2">›</span>
-            <span className="text-brand-green-600 font-medium">Cart</span>
-          </div>
+      <nav className="flex items-center gap-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+        <Link to="/" className="hover:text-primary-700 dark:hover:text-secondary-400">Home</Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="text-slate-700 dark:text-slate-200">Cart</span>
+      </nav>
+
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <span className="eyebrow">Your bag</span>
+          <h1 className="heading-section mt-1">Cart</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {cart.items.length} {cart.items.length === 1 ? 'item' : 'items'} ready to ship
+          </p>
         </div>
+        <button
+          onClick={handleClearCart}
+          className="text-sm font-semibold text-rose-600 hover:text-rose-700 inline-flex items-center gap-1.5"
+        >
+          <Trash2 className="h-4 w-4" />
+          Clear cart
+        </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">YOUR CART</h1>
-            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">Review your items and proceed to checkout</p>
-          </div>
-          <ClearCartButton />
-        </div>
+      <div className="grid lg:grid-cols-[1fr_24rem] gap-6 lg:gap-10">
+        {/* Items */}
+        <div className="space-y-4">
+          <div className="card divide-y divide-slate-100 dark:divide-slate-800">
+            {cart.items.map((item) => (
+              <div key={item._id} className="p-4 sm:p-5 flex gap-4 sm:gap-6">
+                <Link to={`/product/${item.product._id}`} className="shrink-0">
+                  <div className="h-20 w-20 sm:h-28 sm:w-28 rounded-2xl overflow-hidden bg-stone-100 dark:bg-slate-800">
+                    <img
+                      src={getImageUrl(item.product.image) || item.product.image}
+                      alt={item.product.name}
+                      onError={(e) => {
+                        e.currentTarget.src = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+                      }}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                </Link>
 
-        <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
-          {/* Cart Items */}
-          <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-sm border border-brand-green-100 overflow-hidden">
-              <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-                {cart.items.map((item, index) => (
-                  <div 
-                    key={item._id} 
-                    className={`flex flex-col sm:flex-row sm:items-center gap-3 md:gap-6 pb-4 md:pb-6 ${index !== cart.items.length - 1 ? 'border-b border-gray-100' : ''}`}
-                  >
-                    {/* Product Image & Remove Button */}
-                    <div className="relative flex-shrink-0">
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name}
-                        className="w-20 h-20 md:w-28 md:h-28 object-cover rounded-lg md:rounded-xl bg-gray-100 dark:bg-gray-700"
-                        onError={(e) => {
-                          const fallbackImages = [
-                            '/images/products/product-1.webp',
-                            '/images/products/product-2.webp',
-                            '/images/products/product-3.webp',
-                            '/images/products/product-4.webp',
-                            '/images/products/product-5.webp',
-                            '/images/products/product-6.webp',
-                            '/images/products/product-7.webp'
-                          ];
-                          const randomIndex = Math.floor(Math.random() * fallbackImages.length);
-                          e.currentTarget.src = fallbackImages[randomIndex];
-                        }}
-                      />
+                <div className="flex-1 min-w-0">
+                  <Link to={`/product/${item.product._id}`} className="block">
+                    <h3 className="font-semibold text-slate-900 dark:text-white line-clamp-2 hover:text-primary-700 dark:hover:text-secondary-400 transition-colors">
+                      {item.product.name}
+                    </h3>
+                  </Link>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Size: {item.product.weight || '—'}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="inline-flex items-center rounded-full bg-stone-100 dark:bg-slate-800 p-1">
                       <button
-                        onClick={() => handleRemoveItem(item._id)}
-                        className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-brand-red-500 text-white rounded-full flex items-center justify-center hover:bg-brand-red-600 transition-colors shadow-md"
+                        onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                        className="h-8 w-8 rounded-full inline-flex items-center justify-center text-slate-600 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900 disabled:opacity-40"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="w-8 text-center text-sm font-semibold text-slate-800 dark:text-white">{item.quantity}</span>
+                      <button
+                        onClick={() => handleQuantityChange(item._id, item.quantity + 1)}
+                        disabled={item.quantity >= item.product.stock}
+                        className="h-8 w-8 rounded-full inline-flex items-center justify-center text-slate-600 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900 disabled:opacity-40"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
                       </button>
                     </div>
-
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        to={`/product/${item.product._id}`}
-                        className="text-base md:text-lg font-semibold text-gray-900 dark:text-white hover:text-brand-green-600 transition-colors line-clamp-2"
-                      >
-                        {item.product.name}
-                      </Link>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm mt-0.5 md:mt-1">Size: {item.product.weight || '200g'}</p>
-                      <p className="text-gray-400 text-xs mt-0.5">Stock: {item.product.stock} available</p>
-                      <p className="text-brand-green-600 font-bold text-base md:text-lg mt-1 md:mt-2">₹{item.price}</p>
-                    </div>
-
-                    {/* Quantity Controls & Total */}
-                    <div className="flex flex-row sm:flex-col items-center sm:items-center gap-3 sm:gap-2">
-                      <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg md:rounded-xl overflow-hidden">
-                        <button
-                          onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
-                          className="px-3 py-2.5 md:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <Minus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </button>
-                        <span className="w-10 md:w-12 text-center font-semibold text-gray-900 dark:text-white text-sm md:text-base">{item.quantity}</span>
-                        <button
-                          onClick={() => handleQuantityChange(item._id, item.quantity + 1)}
-                          disabled={item.quantity >= item.product.stock}
-                          className="px-3 py-2.5 md:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <Plus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                        </button>
-                      </div>
-                      <p className="font-bold text-gray-900 dark:text-white text-base md:text-lg">
+                    <div className="text-right">
+                      <p className="font-display text-lg font-bold text-primary-900 dark:text-white">
                         ₹{(item.price * item.quantity).toFixed(2)}
                       </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">₹{item.price.toFixed(2)} each</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Promo Code Section */}
-            <div className="mt-4 md:mt-6 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-sm border border-brand-green-100 p-4 md:p-6">
-              <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                <Tag className="h-4 w-4 md:h-5 md:w-5 text-brand-green-600" />
-                <span className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">Promo Code</span>
-              </div>
-              <div className="flex gap-2 md:gap-3">
-                <input
-                  type="text"
-                  placeholder="Enter promo code (try: MUKHWAS10)"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  className="flex-1 px-3 md:px-4 py-2.5 md:py-3 border border-gray-200 dark:border-gray-700 rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-green-500 focus:border-transparent text-sm md:text-base"
-                />
                 <button
-                  onClick={handleApplyPromo}
-                  className="px-4 md:px-6 py-2.5 md:py-3 bg-gray-900 text-white rounded-lg md:rounded-xl font-medium text-sm md:text-base hover:bg-gray-800 transition-colors"
+                  onClick={() => handleRemoveItem(item._id)}
+                  aria-label="Remove"
+                  className="self-start text-slate-400 hover:text-rose-600 transition-colors"
                 >
-                  Apply
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-sm border border-brand-green-100 p-4 md:p-6 lg:sticky lg:top-24">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">Order Summary</h2>
-              
-              <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
-                <div className="flex justify-between text-gray-600 dark:text-gray-400 text-sm md:text-base">
-                  <span>Subtotal ({cart.items.reduce((total, item) => total + item.quantity, 0)} items)</span>
-                  <span className="font-medium">₹{cart.totalAmount.toFixed(2)}</span>
-                </div>
-                
-                {discount > 0 && (
-                  <div className="flex justify-between text-brand-red-600 text-sm md:text-base">
-                    <span>Discount</span>
-                    <span className="font-medium">-₹{discount.toFixed(2)}</span>
-                  </div>
-                )}
-                
-                <div className="flex justify-between text-gray-600 dark:text-gray-400 text-sm md:text-base">
-                  <span className="flex items-center gap-1.5 md:gap-2">
-                    <Truck className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                    Shipping
-                  </span>
-                  <span className="text-brand-green-600 font-medium">Free</span>
-                </div>
-                
-                <div className="flex justify-between text-gray-600 dark:text-gray-400 text-sm md:text-base">
-                  <span className="flex items-center gap-1.5 md:gap-2">
-                    <Shield className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                    Tax
-                  </span>
-                  <span>₹0.00</span>
-                </div>
-
-                <div className="border-t-2 border-gray-100 pt-3 md:pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-base md:text-lg font-bold text-gray-900 dark:text-white">Total</span>
-                    <span className="text-xl md:text-2xl font-bold text-brand-green-600">₹{finalTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCheckout}
-                className="w-full bg-brand-green-600 text-white py-3.5 md:py-4 rounded-lg md:rounded-xl font-semibold text-base md:text-lg hover:bg-brand-green-700 transition-all transform active:scale-95 md:hover:scale-[1.02] shadow-lg shadow-brand-green-200 mb-3 md:mb-4 flex items-center justify-center gap-2"
-              >
-                Go to Checkout
-                <ArrowLeft className="h-4 w-4 md:h-5 md:w-5 rotate-180" />
+          {/* Promo */}
+          <div className="card p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Tag className="h-4 w-4 text-secondary-600" />
+              <span className="font-semibold text-slate-900 dark:text-white">Have a promo code?</span>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                placeholder="Try AKSHAR10"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                className="input-field flex-1"
+              />
+              <button onClick={handleApplyPromo} className="btn-primary btn-md whitespace-nowrap">
+                Apply
               </button>
-
-              <Link
-                to="/products"
-                className="w-full block text-center py-3 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg md:rounded-xl font-medium text-sm md:text-base hover:border-brand-green-400 hover:text-brand-green-600 transition-colors"
-              >
-                Continue Shopping
-              </Link>
-
-              {/* Trust Badges */}
-              <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-100">
-                <div className="flex items-center justify-center gap-4 md:gap-6 text-gray-400">
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    <Shield className="h-4 w-4 md:h-5 md:w-5" />
-                    <span className="text-xs">Secure</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    <Truck className="h-4 w-4 md:h-5 md:w-5" />
-                    <span className="text-xs">Free Delivery</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    <Gift className="h-4 w-4 md:h-5 md:w-5" />
-                    <span className="text-xs">Best Quality</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
+
+        {/* Summary */}
+        <aside className="lg:sticky lg:top-24 self-start">
+          <div className="card p-5 sm:p-6 space-y-5">
+            <h2 className="font-display text-xl font-bold text-slate-900 dark:text-white">Order summary</h2>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                <span>Subtotal ({cart.items.reduce((t, i) => t + i.quantity, 0)} items)</span>
+                <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Discount</span>
+                  <span className="font-medium">−₹{discount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                <span className="inline-flex items-center gap-1.5"><Truck className="h-4 w-4" /> Shipping</span>
+                <span className={`font-medium ${shipping === 0 ? 'text-emerald-600' : ''}`}>
+                  {shipping === 0 ? 'Free' : `₹${shipping}`}
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4" /> Tax</span>
+                <span className="font-medium">Included</span>
+              </div>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-baseline">
+                <span className="font-semibold text-slate-900 dark:text-white">Total</span>
+                <span className="font-display text-2xl font-bold text-primary-900 dark:text-white">₹{finalTotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <button onClick={handleCheckout} className="btn-secondary btn-lg w-full justify-center">
+              Continue to checkout <ArrowRight className="h-5 w-5" />
+            </button>
+            <Link to="/products" className="block text-center text-sm font-semibold text-primary-700 dark:text-secondary-400 hover:underline">
+              Continue shopping
+            </Link>
+
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex flex-col items-center gap-1">
+                <ShieldCheck className="h-4 w-4 text-primary-600" />
+                <span>Secure</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Truck className="h-4 w-4 text-primary-600" />
+                <span>Fast delivery</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Gift className="h-4 w-4 text-primary-600" />
+                <span>Best quality</span>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );
