@@ -209,7 +209,7 @@ const OrdersPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <SocialShareButtons
-                      title={`I just placed an order at Mukhwas! Order #${order._id.slice(-8).toUpperCase()}`}
+                      title={`I just placed an order at Akshar E-Commerce! Order #${order._id.slice(-8).toUpperCase()}`}
                       description={`Ordered ${order.orderItems.length} items for ₹${order.totalPrice.toFixed(2)}`}
                       variant="compact"
                       className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 transition-colors"

@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { Star, ShoppingCart, Search, Filter, Heart, Building2, ArrowRight } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUrl';
 import { toast } from 'react-toastify';
 
 interface Product {
@@ -24,6 +25,11 @@ interface ProductsResponse {
   pages: number;
 }
 
+interface Category {
+  _id: string;
+  name: string;
+}
+
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -36,16 +42,28 @@ const ProductsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('keyword') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [showFilters, setShowFilters] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const categories = ['Papad', 'Aachar', 'Masala', 'Mouth Freshener', 'Snacks', 'Sweets', 'Other'];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await api.get<Category[]>('/categories');
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
         const params = new URLSearchParams();
-        params.append('page', page.toString());
-        
+        // Backend reads pageNumber, not page
+        params.append('pageNumber', page.toString());
+
         if (searchQuery) params.append('keyword', searchQuery);
         if (selectedCategory) params.append('category', selectedCategory);
 
@@ -188,15 +206,15 @@ const ProductsPage: React.FC = () => {
                 </button>
                 {categories.map((category) => (
                   <button
-                    key={category}
-                    onClick={() => handleCategoryChange(category)}
+                    key={category._id}
+                    onClick={() => handleCategoryChange(category.name)}
                     className={`px-3 md:px-4 py-2 rounded-lg transition-colors text-xs md:text-sm ${
-                      selectedCategory === category
+                      selectedCategory === category.name
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
                     }`}
                   >
-                    {category}
+                    {category.name}
                   </button>
                 ))}
               </div>
@@ -226,7 +244,7 @@ const ProductsPage: React.FC = () => {
                       <Link to={`/product/${product._id}`} className="block">
                         <div className="relative">
                           <img
-                            src={product.image}
+                            src={getImageUrl(product.image)}
                             alt={product.name}
                             className="w-full h-36 md:h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {

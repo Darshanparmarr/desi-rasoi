@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { ShoppingBag, Star, ArrowRight, Leaf, Sparkles, Heart, Users, Quote, ShieldCheck, Truck, Clock, ChevronDown } from 'lucide-react';
 import RecentlyViewedProducts from '../components/RecentlyViewedProducts';
+import { getImageUrl } from '../utils/imageUrl';
 
 interface Product {
   _id: string;
@@ -14,34 +15,45 @@ interface Product {
   numReviews: number;
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  description?: string;
+  image?: string;
+}
+
+const FALLBACK_IMAGES = [
+  '/images/products/product-1.webp',
+  '/images/products/product-2.webp',
+  '/images/products/product-3.webp',
+  '/images/products/product-4.webp',
+  '/images/products/product-5.webp',
+  '/images/products/product-6.webp',
+];
+
 const HomePage: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
+    const fetchData = async () => {
       try {
-        const { data } = await api.get('/products/featured');
-        setFeaturedProducts(data);
+        const [productsRes, categoriesRes] = await Promise.all([
+          api.get('/products/featured'),
+          api.get<Category[]>('/categories'),
+        ]);
+        setFeaturedProducts(productsRes.data);
+        setCategories(categoriesRes.data);
       } catch (error) {
-        console.error('Failed to fetch featured products:', error);
+        console.error('Failed to fetch homepage data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFeaturedProducts();
+    fetchData();
   }, []);
-
-  // Large category cards for homemade Indian products
-  const categories = [
-    { name: 'Papad', image: '/images/products/product-1.webp', desc: 'Crispy homemade papads in various flavors' },
-    { name: 'Aachar', image: '/images/products/product-2.webp', desc: 'Traditional pickles made with love' },
-    { name: 'Masala', image: '/images/products/product-3.webp', desc: 'Fresh ground spices for authentic taste' },
-    { name: 'Mouth Freshener', image: '/images/products/product-4.webp', desc: 'Authentic mukhwas varieties' },
-    { name: 'Snacks', image: '/images/products/product-5.webp', desc: 'Homemade namkeen and savory treats' },
-    { name: 'Sweets', image: '/images/products/product-6.webp', desc: 'Traditional Indian mithai' },
-  ];
 
   // Brand story features for homemade Indian products
   const brandFeatures = [
@@ -98,7 +110,7 @@ const HomePage: React.FC = () => {
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img
             src="/images/products/banner.png"
-            alt="Mukhwas Background"
+            alt="Akshar E-Commerce Background"
             className="w-full h-full object-cover scale-105"
             style={{ animation: 'pulse 20s infinite alternate' }}
           />
@@ -187,30 +199,46 @@ const HomePage: React.FC = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-            {categories.map((category) => (
-              <Link
-                key={category.name}
-                to={`/products?category=${category.name}`}
-                className="group relative overflow-hidden rounded-[2rem] aspect-[4/5] shadow-xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 bg-gray-100 dark:bg-gray-800"
-              >
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="w-12 h-1 bg-brand-green-400 mb-4 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 delay-100"></div>
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-3 drop-shadow-lg tracking-tight">{category.name}</h3>
-                  <p className="text-white/90 mb-6 text-sm md:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 font-medium leading-relaxed">{category.desc}</p>
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/20 backdrop-blur-md text-white group-hover:bg-brand-green-500 transition-colors duration-300">
-                    <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform duration-300" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="animate-pulse rounded-[2rem] aspect-[4/5] bg-gray-200 dark:bg-gray-800" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+              {categories.map((category, index) => {
+                const imgSrc = getImageUrl(category.image) || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+                return (
+                  <Link
+                    key={category._id}
+                    to={`/products?category=${encodeURIComponent(category.name)}`}
+                    className="group relative overflow-hidden rounded-[2rem] aspect-[4/5] shadow-xl hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2 bg-gray-100 dark:bg-gray-800"
+                  >
+                    <img
+                      src={imgSrc}
+                      alt={category.name}
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                      onError={(e) => {
+                        e.currentTarget.src = FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500"></div>
+                    <div className="absolute bottom-0 left-0 right-0 p-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                      <div className="w-12 h-1 bg-brand-green-400 mb-4 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 delay-100"></div>
+                      <h3 className="text-3xl md:text-4xl font-bold text-white mb-3 drop-shadow-lg tracking-tight">{category.name}</h3>
+                      {category.description && (
+                        <p className="text-white/90 mb-6 text-sm md:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 font-medium leading-relaxed">{category.description}</p>
+                      )}
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/20 backdrop-blur-md text-white group-hover:bg-brand-green-500 transition-colors duration-300">
+                        <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform duration-300" />
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -258,7 +286,7 @@ const HomePage: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-br from-brand-green-50/50 to-transparent dark:from-brand-green-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem]"></div>
                     <div className="relative rounded-[1.5rem] overflow-hidden mb-5 aspect-[4/5] bg-gray-50 dark:bg-gray-900">
                       <img
-                        src={product.image}
+                        src={getImageUrl(product.image)}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         onError={(e) => {

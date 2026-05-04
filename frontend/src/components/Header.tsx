@@ -59,10 +59,10 @@ const Header: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 bg-brand-green-600 rounded-xl flex items-center justify-center group-hover:bg-brand-green-700 transition-colors">
-              <span className="text-white font-bold text-xl">M</span>
+              <span className="text-white font-bold text-xl">A</span>
             </div>
             <div>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Desi Rasoi</span>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Akshar E-Commerce</span>
               <span className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">Homemade Indian Products</span>
             </div>
           </Link>
@@ -122,32 +122,11 @@ const Header: React.FC = () => {
               )}
             </div>
 
-            <Link 
-              to="/categories" 
+            <Link
+              to="/categories"
               className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-green-600 dark:hover:text-brand-green-400 font-medium transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-700"
             >
               Categories
-            </Link>
-
-            <Link 
-              to="/about" 
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-green-600 dark:hover:text-brand-green-400 font-medium transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-700"
-            >
-              About Us
-            </Link>
-
-            <Link 
-              to="/contact" 
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-green-600 dark:hover:text-brand-green-400 font-medium transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-700"
-            >
-              Contact
-            </Link>
-
-            <Link 
-              to="/faq" 
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-brand-green-600 dark:hover:text-brand-green-400 font-medium transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-700"
-            >
-              FAQ
             </Link>
 
             {/* Dark Mode Toggle */}
@@ -334,33 +313,6 @@ const Header: React.FC = () => {
               >
                 <span className="w-2 h-2 rounded-full bg-brand-green-400"></span>
                 All Categories
-              </Link>
-
-              <Link
-                to="/about"
-                className="px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 hover:text-brand-green-600 dark:hover:text-brand-green-400 rounded-xl transition-colors font-medium flex items-center gap-3"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                About Us
-              </Link>
-
-              <Link
-                to="/contact"
-                className="px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 hover:text-brand-green-600 dark:hover:text-brand-green-400 rounded-xl transition-colors font-medium flex items-center gap-3"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <span className="w-2 h-2 rounded-full bg-orange-400"></span>
-                Contact Us
-              </Link>
-
-              <Link
-                to="/faq"
-                className="px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 hover:text-brand-green-600 dark:hover:text-brand-green-400 rounded-xl transition-colors font-medium flex items-center gap-3"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-                FAQ
               </Link>
 
               <Link

@@ -13,12 +13,16 @@ const {
 
 // Public routes
 router.get('/', getCategories);
-router.get('/:id', getCategoryById);
+
+// Specific named routes must come before /:id to avoid being matched as an id param
+router.get('/admin/all', protect, admin, getAllCategories);
 
 // Admin routes
-router.get('/admin/all', protect, admin, getAllCategories);
 router.post('/', protect, admin, upload.single('image'), createCategory);
 router.put('/:id', protect, admin, upload.single('image'), updateCategory);
 router.delete('/:id', protect, admin, deleteCategory);
+
+// Parameterised public route — kept last so named routes match first
+router.get('/:id', getCategoryById);
 
 module.exports = router;

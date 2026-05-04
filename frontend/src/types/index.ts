@@ -33,6 +33,7 @@ export interface User {
   name: string;
   email: string;
   role: 'user' | 'employee' | 'admin';
+  token?: string;
   address?: {
     street: string;
     city: string;
@@ -101,13 +102,3 @@ export interface BulkInquiry {
   updatedAt?: string;
 }
 
-export interface FAQ {
-  _id: string;
-  question: string;
-  answer: string;
-  category: 'General' | 'Products' | 'Shipping' | 'Orders' | 'Ingredients';
-  order: number;
-  isActive: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}

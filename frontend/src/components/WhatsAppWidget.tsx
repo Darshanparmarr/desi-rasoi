@@ -3,7 +3,7 @@ import React from 'react';
 const WhatsAppWidget: React.FC = () => {
   // Use a default number or an environment variable for the phone number
   const phoneNumber = '9867008801'; 
-  const message = 'Hello Desi Rasoi! I want to know more about your products.';
+  const message = 'Hello Akshar E-Commerce! I want to know more about your products.';
   const waLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (

@@ -22,9 +22,6 @@ import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
 import WishlistPage from './pages/WishlistPage';
 import ProductComparisonPage from './pages/ProductComparisonPage';
-import AboutUsPage from './pages/AboutUsPage';
-import ContactUsPage from './pages/ContactUsPage';
-import FAQPage from './pages/FAQPage';
 import WholesaleInquiryPage from './pages/WholesaleInquiryPage';
 import OrderLookupPage from './pages/OrderLookupPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
@@ -58,9 +55,6 @@ function App() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
                 <Route path="/compare" element={<ProductComparisonPage />} />
-                <Route path="/about" element={<AboutUsPage />} />
-                <Route path="/contact" element={<ContactUsPage />} />
-                <Route path="/faq" element={<FAQPage />} />
                 <Route path="/wholesale" element={<WholesaleInquiryPage />} />
                 <Route path="/order-lookup" element={<OrderLookupPage />} />
                 <Route path="/order-success/:id" element={<OrderSuccessPage />} />

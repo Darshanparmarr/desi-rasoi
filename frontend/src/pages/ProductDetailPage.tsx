@@ -307,7 +307,7 @@ const ProductDetailPage: React.FC = () => {
                   </button>
                   {product && (
                     <SocialShareButtons
-                      title={`Check out ${product.name} on Mukhwas!`}
+                      title={`Check out ${product.name} on Akshar E-Commerce!`}
                       description={`${product.description.substring(0, 100)}...`}
                       variant="compact"
                       className="btn-outline px-4 py-3 md:py-2"

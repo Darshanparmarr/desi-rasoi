@@ -20,7 +20,7 @@ const BOT_RESPONSES: Record<string, string> = {
   "What are the shipping charges?": "We offer free shipping on orders above ₹500. For orders below that, a standard charge applies.",
   "Do you offer international shipping?": "Currently, we ship only within India. We hope to expand internationally soon!",
   "How can I return an item?": "You can initiate a return within 7 days of delivery from your Orders page.",
-  "default": "Thanks for reaching out! A customer support representative will get back to you shortly. For immediate assistance, please check our FAQ page."
+  "default": "Thanks for reaching out! A customer support representative will get back to you shortly. For immediate assistance, message us on WhatsApp at +91 9867008801."
 };
 
 const ChatBot: React.FC = () => {
@@ -28,7 +28,7 @@ const ChatBot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! Welcome to Mukhwas. How can I help you today?',
+      text: 'Hello! Welcome to Akshar E-Commerce. How can I help you today?',
       sender: 'bot',
       timestamp: new Date()
     }

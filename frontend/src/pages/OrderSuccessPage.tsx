@@ -242,7 +242,14 @@ const OrderSuccessPage: React.FC = () => {
                 <p className="font-semibold text-gray-900 dark:text-white">Need Help?</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Questions about your order?{' '}
-                  <Link to="/contact" className="text-green-600 hover:underline">Contact our support team</Link>
+                  <a
+                    href="https://wa.me/9867008801"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 hover:underline"
+                  >
+                    Chat with us on WhatsApp
+                  </a>
                 </p>
               </div>
             </div>

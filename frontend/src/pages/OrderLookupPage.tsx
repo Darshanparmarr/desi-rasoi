@@ -307,9 +307,14 @@ const OrderLookupPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Need help with your order?{' '}
-                  <Link to="/contact" className="text-green-600 hover:underline font-medium">
-                    Contact us
-                  </Link>
+                  <a
+                    href="https://wa.me/9867008801"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 hover:underline font-medium"
+                  >
+                    Chat on WhatsApp
+                  </a>
                 </p>
                 <div className="flex gap-3">
                   <Link
@@ -353,9 +358,14 @@ const OrderLookupPage: React.FC = () => {
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Need Help?</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Can't find your order? Get in touch</p>
-              <Link to="/contact" className="text-green-600 font-medium hover:underline inline-flex items-center">
-                Contact Us <ChevronRight className="w-4 h-4 ml-1" />
-              </Link>
+              <a
+                href="https://wa.me/9867008801"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-600 font-medium hover:underline inline-flex items-center"
+              >
+                WhatsApp Us <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
             </div>
           </div>
         )}
