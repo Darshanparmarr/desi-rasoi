@@ -24,14 +24,13 @@ import CompareButton from '../components/CompareButton';
 import { toast } from 'react-toastify';
 import { Product } from '../types';
 import { getImageUrl } from '../utils/imageUrl';
+import { DUMMY_PRODUCTS } from '../data/dummyCatalog';
 
 const FALLBACKS = [
-  '/images/products/product-1.webp',
-  '/images/products/product-2.webp',
-  '/images/products/product-3.webp',
-  '/images/products/product-4.webp',
-  '/images/products/product-5.webp',
-  '/images/products/product-6.webp',
+  '/images/products/category-aachar.jpg',
+  '/images/products/category-fruit.jpg',
+  '/images/products/category-mukhwas.jpg',
+  '/images/products/category-masala.jpg',
 ];
 
 const FEATURES = [
@@ -67,11 +66,31 @@ const ProductDetailPage: React.FC = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
+        // Built-in dummy products (used when DB is empty) have IDs like "dummy-..."
+        if (id && id.startsWith('dummy-')) {
+          const dummy = DUMMY_PRODUCTS.find((p) => p._id === id);
+          if (dummy) {
+            const asProduct = dummy as unknown as Product;
+            setProduct(asProduct);
+            setActiveImageIdx(0);
+            addToRecentlyViewed(asProduct);
+            return;
+          }
+        }
         const { data } = await api.get<Product>(`/products/${id}`);
         setProduct(data);
         setActiveImageIdx(0);
         addToRecentlyViewed(data);
       } catch (error) {
+        // Fall back to dummy lookup if backend is unavailable
+        const dummy = DUMMY_PRODUCTS.find((p) => p._id === id);
+        if (dummy) {
+          const asProduct = dummy as unknown as Product;
+          setProduct(asProduct);
+          setActiveImageIdx(0);
+          addToRecentlyViewed(asProduct);
+          return;
+        }
         console.error('Failed to fetch product:', error);
         toast.error('Product not found');
         navigate('/products');

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import api from '../services/api';
 import { getImageUrl } from '../utils/imageUrl';
+import { DUMMY_CATEGORIES } from '../data/dummyCatalog';
 
 interface Category {
   _id: string;
@@ -24,12 +25,10 @@ const GRADIENT_COLORS = [
 ];
 
 const FALLBACK_IMAGES = [
-  '/images/products/product-1.webp',
-  '/images/products/product-2.webp',
-  '/images/products/product-3.webp',
-  '/images/products/product-4.webp',
-  '/images/products/product-5.webp',
-  '/images/products/product-6.webp',
+  '/images/products/category-aachar.jpg',
+  '/images/products/category-fruit.jpg',
+  '/images/products/category-mukhwas.jpg',
+  '/images/products/category-masala.jpg',
 ];
 
 const CategoriesPage: React.FC = () => {
@@ -39,10 +38,11 @@ const CategoriesPage: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await api.get('/categories');
-        setCategories(data);
+        const { data } = await api.get<Category[]>('/categories');
+        setCategories(data && data.length ? data : (DUMMY_CATEGORIES as Category[]));
       } catch (error) {
-        console.error('Failed to fetch categories:', error);
+        console.error('Failed to fetch categories — using built-in catalog:', error);
+        setCategories(DUMMY_CATEGORIES as Category[]);
       } finally {
         setLoading(false);
       }

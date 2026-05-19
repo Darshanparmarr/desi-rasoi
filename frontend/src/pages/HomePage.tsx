@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import RecentlyViewedProducts from '../components/RecentlyViewedProducts';
 import { getImageUrl } from '../utils/imageUrl';
+import { DUMMY_CATEGORIES, DUMMY_FEATURED_PRODUCTS } from '../data/dummyCatalog';
 
 interface Product {
   _id: string;
@@ -34,12 +35,12 @@ interface Category {
 }
 
 const FALLBACK_IMAGES = [
-  '/images/products/product-1.webp',
-  '/images/products/product-2.webp',
-  '/images/products/product-3.webp',
-  '/images/products/product-4.webp',
-  '/images/products/product-5.webp',
-  '/images/products/product-6.webp',
+  '/images/products/category-aachar.jpg',
+  '/images/products/category-fruit.jpg',
+  '/images/products/category-mukhwas.jpg',
+  '/images/products/category-masala.jpg',
+  '/images/products/aachar-2.jpg',
+  '/images/products/masala-2.jpg',
 ];
 
 const TRUST_BADGES = [
@@ -54,19 +55,19 @@ const TESTIMONIALS = [
     name: 'Priya Sharma',
     location: 'Mumbai',
     text: 'The authentic taste reminds me of my grandmother. Truly the best mukhwas I have ever tasted!',
-    image: '/images/products/product-1.webp',
+    image: '/images/products/mukhwas-2.jpg',
   },
   {
     name: 'Rajesh Patel',
     location: 'Ahmedabad',
     text: 'Perfect after-meal treat. The quality is exceptional and the aroma is divine.',
-    image: '/images/products/product-2.webp',
+    image: '/images/products/aachar-1.jpg',
   },
   {
     name: 'Anita Gupta',
     location: 'Delhi',
     text: 'I serve this at all my dinner parties. Guests always ask where I get it from!',
-    image: '/images/products/product-3.webp',
+    image: '/images/products/masala-2.jpg',
   },
 ];
 
@@ -79,13 +80,19 @@ const HomePage: React.FC = () => {
     const fetchData = async () => {
       try {
         const [productsRes, categoriesRes] = await Promise.all([
-          api.get('/products/featured'),
+          api.get<Product[]>('/products/featured'),
           api.get<Category[]>('/categories'),
         ]);
-        setFeaturedProducts(productsRes.data);
-        setCategories(categoriesRes.data);
+        setFeaturedProducts(
+          productsRes.data && productsRes.data.length ? productsRes.data : (DUMMY_FEATURED_PRODUCTS as unknown as Product[])
+        );
+        setCategories(
+          categoriesRes.data && categoriesRes.data.length ? categoriesRes.data : DUMMY_CATEGORIES
+        );
       } catch (error) {
-        console.error('Failed to fetch homepage data:', error);
+        console.error('Failed to fetch homepage data — using built-in catalog:', error);
+        setFeaturedProducts(DUMMY_FEATURED_PRODUCTS as unknown as Product[]);
+        setCategories(DUMMY_CATEGORIES);
       } finally {
         setLoading(false);
       }
@@ -148,7 +155,7 @@ const HomePage: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-3 sm:space-y-4 pt-8">
                   <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-card-hover">
-                    <img src="/images/products/product-1.webp" alt="" className="h-full w-full object-cover" />
+                    <img src="/images/products/aachar-1.jpg" alt="" className="h-full w-full object-cover" />
                   </div>
                   <div className="aspect-square rounded-3xl bg-gradient-to-br from-secondary-500 to-secondary-700 text-white p-5 flex flex-col justify-between shadow-glow-orange">
                     <Leaf className="h-7 w-7" />
@@ -167,7 +174,7 @@ const HomePage: React.FC = () => {
                     </div>
                   </div>
                   <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-card-hover">
-                    <img src="/images/products/product-3.webp" alt="" className="h-full w-full object-cover" />
+                    <img src="/images/products/mukhwas-2.jpg" alt="" className="h-full w-full object-cover" />
                   </div>
                 </div>
               </div>
@@ -316,7 +323,7 @@ const HomePage: React.FC = () => {
             <div className="lg:col-span-6 order-2 lg:order-1 grid grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-3 sm:space-y-4">
                 <div className="aspect-square rounded-3xl overflow-hidden shadow-card">
-                  <img src="/images/products/product-2.webp" alt="" className="h-full w-full object-cover" />
+                  <img src="/images/products/masala-2.jpg" alt="" className="h-full w-full object-cover" />
                 </div>
                 <div className="aspect-square rounded-3xl bg-primary-900 text-white p-6 flex flex-col justify-between">
                   <Heart className="h-7 w-7 text-secondary-400" />
@@ -335,7 +342,7 @@ const HomePage: React.FC = () => {
                   </div>
                 </div>
                 <div className="aspect-square rounded-3xl overflow-hidden shadow-card">
-                  <img src="/images/products/product-4.webp" alt="" className="h-full w-full object-cover" />
+                  <img src="/images/products/category-fruit.jpg" alt="" className="h-full w-full object-cover" />
                 </div>
               </div>
             </div>

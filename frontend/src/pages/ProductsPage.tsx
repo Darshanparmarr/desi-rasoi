@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { Star, ShoppingCart, Search, Heart, Building2, ArrowRight, SlidersHorizontal, X } from 'lucide-react';
 import { getImageUrl } from '../utils/imageUrl';
 import { toast } from 'react-toastify';
+import { DUMMY_PRODUCTS, DUMMY_CATEGORIES } from '../data/dummyCatalog';
 
 interface Product {
   _id: string;
@@ -31,12 +32,12 @@ interface Category {
 }
 
 const FALLBACKS = [
-  '/images/products/product-1.webp',
-  '/images/products/product-2.webp',
-  '/images/products/product-3.webp',
-  '/images/products/product-4.webp',
-  '/images/products/product-5.webp',
-  '/images/products/product-6.webp',
+  '/images/products/category-aachar.jpg',
+  '/images/products/category-fruit.jpg',
+  '/images/products/category-mukhwas.jpg',
+  '/images/products/category-masala.jpg',
+  '/images/products/aachar-2.jpg',
+  '/images/products/masala-2.jpg',
 ];
 
 const SORT_OPTIONS: { label: string; value: string }[] = [
@@ -65,9 +66,19 @@ const ProductsPage: React.FC = () => {
   useEffect(() => {
     api
       .get<Category[]>('/categories')
-      .then(({ data }) => setCategories(data))
-      .catch((err) => console.error('Failed to fetch categories:', err));
+      .then(({ data }) => setCategories(data && data.length ? data : DUMMY_CATEGORIES))
+      .catch(() => setCategories(DUMMY_CATEGORIES));
   }, []);
+
+  const filterDummy = React.useCallback((): Product[] => {
+    let list: Product[] = DUMMY_PRODUCTS as unknown as Product[];
+    if (selectedCategory) list = list.filter((p) => p.category === selectedCategory);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((p) => p.name.toLowerCase().includes(q));
+    }
+    return list;
+  }, [selectedCategory, searchQuery]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -78,18 +89,25 @@ const ProductsPage: React.FC = () => {
         if (searchQuery) params.append('keyword', searchQuery);
         if (selectedCategory) params.append('category', selectedCategory);
         const { data } = await api.get<ProductsResponse>(`/products?${params}`);
-        setProducts(data.products);
-        setPage(data.page);
-        setPages(data.pages);
+        if (data.products && data.products.length) {
+          setProducts(data.products);
+          setPage(data.page);
+          setPages(data.pages);
+        } else {
+          setProducts(filterDummy());
+          setPages(1);
+        }
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('Failed to fetch products — using built-in catalog:', error);
+        setProducts(filterDummy());
+        setPages(1);
       } finally {
         setLoading(false);
       }
     };
     fetchProducts();
     if (user) fetchWishlist();
-  }, [page, searchQuery, selectedCategory, user, fetchWishlist]);
+  }, [page, searchQuery, selectedCategory, user, fetchWishlist, filterDummy]);
 
   const sortedProducts = React.useMemo(() => {
     const list = [...products];

@@ -20,12 +20,10 @@ import {
 } from 'lucide-react';
 
 const SHOP_CATEGORIES = [
-  { name: 'Papad', image: '/images/products/product-1.webp' },
-  { name: 'Aachar', image: '/images/products/product-2.webp' },
-  { name: 'Masala', image: '/images/products/product-3.webp' },
-  { name: 'Mouth Freshener', image: '/images/products/product-4.webp' },
-  { name: 'Snacks', image: '/images/products/product-5.webp' },
-  { name: 'Sweets', image: '/images/products/product-6.webp' },
+  { name: 'Aachar', image: '/images/products/category-aachar.jpg' },
+  { name: 'Fruit', image: '/images/products/category-fruit.jpg' },
+  { name: 'Mukhwas', image: '/images/products/category-mukhwas.jpg' },
+  { name: 'Masala', image: '/images/products/category-masala.jpg' },
 ];
 
 const NAV_LINKS: { name: string; to: string }[] = [
